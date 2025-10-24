@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Styler</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+      color: #e4e4e4;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 50%, rgba(0, 195, 255, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(0, 112, 243, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    h1 {
+      font-weight: 700;
+      font-size: clamp(2rem, 5vw, 3rem);
+      background: linear-gradient(135deg, #00c3ff 0%, #0070f3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      margin: 20px 0 40px;
+      letter-spacing: -0.5px;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Form Section */
+    form {
+      background: rgba(24, 24, 27, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: clamp(20px, 4vw, 40px);
+      margin: 0 auto 40px;
+      border-radius: 24px;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                  0 0 0 1px rgba(255, 255, 255, 0.05);
+      animation: fadeInUp 0.6s ease-out 0.2s backwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-group {
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #a1a1aa;
+      margin-bottom: 12px;
+      text-align: left;
+      letter-spacing: 0.3px;
+    }
+
+    /* File Upload Styling */
+    .file-upload-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 20px;
+      background: #1e1e22;
+      border: 2px dashed rgba(0, 195, 255, 0.3);
+      border-radius: 16px;
+      color: #f5f5f5;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.95rem;
+    }
+
+    input[type="file"]:hover {
+      border-color: rgba(0, 195, 255, 0.6);
+      background: rgba(30, 30, 34, 0.8);
+    }
+
+    input[type="file"]::file-selector-button {
+      background: linear-gradient(135deg, #00c3ff 0%, #0070f3 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-right: 15px;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 195, 255, 0.3);
+    }
+
+    /* Range Input Group */
+    .range-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      background: rgba(30, 30, 34, 0.5);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    input[type="number"] {
+      width: 80px;
+      padding: 12px;
+      background: #27272a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #f5f5f5;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #00c3ff;
+      box-shadow: 0 0 0 3px rgba(0, 195, 255, 0.1);
+    }
+
+    .range-separator {
+      color: #71717a;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
+    /* Submit Button */
+    button[type="submit"] {
+      width: 100%;
+      background: linear-gradient(135deg, #00c3ff 0%, #0070f3 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1.05rem;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      box-shadow: 0 10px 30px rgba(0, 195, 255, 0.2);
+      letter-spacing: 0.3px;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(0, 195, 255, 0.4);
+    }
+
+    button[type="submit"]:active {
+      transform: translateY(0);
+    }
+
+    /* Image Slider Section */
+    .slider-container {
+      margin-top: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeInUp 0.6s ease-out 0.4s backwards;
+    }
+
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 30px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+    }
+
+    .styled-image {
+      width: 100%;
+      display: block;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Slider Controls */
+    .slider-controls {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(24, 24, 27, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .slider-label {
+      font-size: 1.1rem;
+      color: #e4e4e4;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    #currentLevel {
+      color: #00c3ff;
+      font-weight: 700;
+      font-size: 1.3rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      background: linear-gradient(to right, 
+        #00c3ff 0%, 
+        #00c3ff var(--value, 0%), 
+        #27272a var(--value, 0%), 
+        #27272a 100%);
+      border-radius: 10px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00c3ff 0%, #0070f3 100%);
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 195, 255, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 6px 20px rgba(0, 195, 255, 0.6);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00c3ff 0%, #0070f3 100%);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 15px rgba(0, 195, 255, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    input[type="range"]::-moz-range-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 6px 20px rgba(0, 195, 255, 0.6);
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 80px;
+      padding: 30px;
+      text-align: center;
+      color: #71717a;
+      font-size: 0.9rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    footer p {
+      margin: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      h1 {
+        margin: 15px 0 30px;
+      }
+
+      form {
+        padding: 25px 20px;
+      }
+
+      .range-group {
+        padding: 15px;
+      }
+
+      input[type="number"] {
+        width: 70px;
+        padding: 10px;
+      }
+
+      .slider-controls {
+        padding: 25px 20px;
+      }
+
+      .slider-label {
+        font-size: 1rem;
+      }
+
+      #currentLevel {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      form {
+        padding: 20px 15px;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        font-size: 0.9rem;
+      }
+
+      input[type="file"]::file-selector-button {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+      }
+
+      .range-group {
+        gap: 10px;
+        padding: 15px 10px;
+      }
+
+      input[type="number"] {
+        width: 65px;
+        font-size: 0.95rem;
+      }
+
+      button[type="submit"] {
+        padding: 14px 24px;
+        font-size: 1rem;
+      }
+
+      .slider-controls {
+        padding: 20px 15px;
+      }
+
+      footer {
+        margin-top: 60px;
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Loading Animation */
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✨ AI Image Styler</h1>
+    
+    <form action="/style" method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>📸 Upload Your Image</label>
+        <input type="file" name="file" accept="image/*" required>
+      </div>
+
+      <div class="form-group">
+        <label>🎨 Style Intensity Range</label>
+        <div class="range-group">
+          <input type="number" name="cluster_min" value="2" min="2" max="20">
+          <span class="range-separator">to</span>
+          <input type="number" name="cluster_max" value="8" min="3" max="30">
+        </div>
+      </div>
+
+      <button type="submit">🚀 Generate Styled Versions</button>
+    </form>
+
+    {% if styled_images %}
+    <div class="slider-container">
+      <div class="image-wrapper">
+        <img id="styledImg" src="{{ styled_images[0] }}" class="styled-image" alt="Styled image">
+      </div>
+      
+      <div class="slider-controls">
+        <div class="slider-label">
+          Style Intensity: <span id="currentLevel">1</span> / {{ styled_images|length }}
+        </div>
+        <input type="range" id="imageSlider" min="1" max="{{ styled_images|length }}" value="1" step="1">
+      </div>
+    </div>
+
+    <script>
+      const images = {{ styled_images | tojson }};
+      const imgElement = document.getElementById('styledImg');
+      const slider = document.getElementById('imageSlider');
+      const levelLabel = document.getElementById('currentLevel');
+
+      // Update range background
+      function updateSliderBackground() {
+        const value = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+        slider.style.setProperty('--value', value + '%');
+      }
+
+      slider.addEventListener('input', () => {
+        const idx = parseInt(slider.value) - 1;
+        imgElement.style.opacity = 0;
+        updateSliderBackground();
+        
+        setTimeout(() => {
+          imgElement.src = images[idx];
+          imgElement.style.opacity = 1;
+          levelLabel.textContent = slider.value;
+        }, 150);
+      });
+
+      // Initialize slider background
+      updateSliderBackground();
+    </script>
+    {% endif %}
+
+    <footer>
+      <p>Powered by FastAPI • Built with ❤️ and Pation by Hassan!</p>
+    </footer>
+  </div>
+</body>
+</html>
