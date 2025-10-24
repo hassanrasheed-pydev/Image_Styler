@@ -25,19 +25,6 @@ Model: KNN-based color quantization
 
 Additional Tools: Pillow, NumPy, Scikit-learn
 
-📂 Project Structure
-ImageStyler/
-|
-├── outputs/
-│   └── styles_2.jpeg, ....
-├── styler.py         # Contains KNN-based image stylization pipeline
-├── server.py         # FastAPI app
-├── test.py           # For Testing (optional)
-├── templates/
-│   └── index.html    # Dark-themed frontend
-└── README.md
-└──other neccecry files too # like(uv.lock, pyproject.toml, etc)
-
 ⚙️ Usage
 1. Install Dependencies
 pip install fastapi uvicorn pillow scikit-learn numpy
